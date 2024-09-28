@@ -1,0 +1,47 @@
+# General Python
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Environment variables
+.env
+
+# IDE configurations
+.idea/
+.vscode/
+
+# Other files
+*.egg-info/
+*.eggs/
+dist/
+build/
+
+# Cache
+.cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
+
+# Compiled files
+*.so
+
+# Byte-compiled files
+*.pyc
+
+# Backup files
+*.bak
+
+# Temporary files
+*.tmp
+
+# Editor-specific files
+*~
+
+# Mac OS
+.DS_Store
