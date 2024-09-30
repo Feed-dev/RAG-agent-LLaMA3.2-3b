@@ -474,7 +474,7 @@ workflow.add_conditional_edges(
     },
 )
 
-# Compil
+# Compile
 graph = workflow.compile()
 display(Image(graph.get_graph().draw_mermaid_png()))
 
