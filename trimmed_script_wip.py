@@ -1,10 +1,25 @@
-### LLM
+import os, getpass
 from langchain_ollama import ChatOllama
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_community.vectorstores import SKLearnVectorStore
+from langchain_nomic.embeddings import NomicEmbeddings
+import json
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_community.tools.tavily_search import TavilySearchResults
+import operator
+from typing_extensions import TypedDict
+from typing import List, Annotated
+from langchain.schema import Document
+from langgraph.graph import END
+from langgraph.graph import StateGraph
+from IPython.display import Image, display
+
 local_llm = 'llama3.2:3b-instruct-fp16'
 llm = ChatOllama(model=local_llm, temperature=0)
 llm_json_mode = ChatOllama(model=local_llm, temperature=0, format='json')
 
-import os, getpass
+
 
 def _set_env(var: str):
     if not os.environ.get(var):
@@ -17,10 +32,6 @@ _set_env("LANGCHAIN_API_KEY")
 os.environ["LANGCHAIN_TRACING_V2"] = "true"
 os.environ["LANGCHAIN_PROJECT"] = "local-llama32-rag"
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import WebBaseLoader
-from langchain_community.vectorstores import SKLearnVectorStore
-from langchain_nomic.embeddings import NomicEmbeddings
 
 urls = [
     "https://lilianweng.github.io/posts/2023-06-23-agent/",
@@ -47,10 +58,8 @@ vectorstore = SKLearnVectorStore.from_documents(
 # Create retriever
 retriever = vectorstore.as_retriever(k=3)
 
-### Router
-import json
-from langchain_core.messages import HumanMessage, SystemMessage
 
+### Router
 # Prompt
 router_instructions = """You are an expert at routing a user question to a vectorstore or web search.
 
@@ -60,6 +69,7 @@ Use the vectorstore for questions on these topics. For all else, and especially 
 
 Return JSON with single key, datasource, that is 'websearch' or 'vectorstore' depending on the question."""
 
+'''
 # Test router
 test_web_search = llm_json_mode.invoke([SystemMessage(content=router_instructions)] + [
     HumanMessage(content="Who is favored to win the NFC Championship game in the 2024 season?")])
@@ -68,6 +78,7 @@ test_web_search_2 = llm_json_mode.invoke([SystemMessage(content=router_instructi
 test_vector_store = llm_json_mode.invoke(
     [SystemMessage(content=router_instructions)] + [HumanMessage(content="What are the types of agent memory?")])
 print(json.loads(test_web_search.content), json.loads(test_web_search_2.content), json.loads(test_vector_store.content))
+'''
 
 ### Retrieval Grader
 
@@ -83,6 +94,7 @@ This carefully and objectively assess whether the document contains at least som
 
 Return JSON with single key, binary_score, that is 'yes' or 'no' score to indicate whether the document contains at least some information that is relevant to the question."""
 
+'''
 # Test
 question = "What is Chain of thought prompting?"
 docs = retriever.invoke(question)
@@ -90,6 +102,7 @@ doc_txt = docs[1].page_content
 doc_grader_prompt_formatted = doc_grader_prompt.format(document=doc_txt, question=question)
 result = llm_json_mode.invoke([SystemMessage(content=doc_grader_instructions)] + [HumanMessage(content=doc_grader_prompt_formatted)])
 json.loads(result.content)
+'''
 
 ### Generate
 
@@ -116,12 +129,14 @@ Answer:"""
 def format_docs(docs):
     return "\n\n".join(doc.page_content for doc in docs)
 
+'''
 # Test
 docs = retriever.invoke(question)
 docs_txt = format_docs(docs)
 rag_prompt_formatted = rag_prompt.format(context=docs_txt, question=question)
 generation = llm.invoke([HumanMessage(content=rag_prompt_formatted)])
 print(generation.content)
+'''
 
 ### Hallucination Grader
 
@@ -153,10 +168,12 @@ hallucination_grader_prompt = """FACTS: \n\n {documents} \n\n STUDENT ANSWER: {g
 
 Return JSON with two two keys, binary_score is 'yes' or 'no' score to indicate whether the STUDENT ANSWER is grounded in the FACTS. And a key, explanation, that contains an explanation of the score."""
 
+'''
 # Test using documents and generation from above
 hallucination_grader_prompt_formatted = hallucination_grader_prompt.format(documents=docs_txt, generation=generation.content)
 result = llm_json_mode.invoke([SystemMessage(content=hallucination_grader_instructions)] + [HumanMessage(content=hallucination_grader_prompt_formatted)])
 json.loads(result.content)
+'''
 
 ### Answer Grader
 
@@ -186,22 +203,22 @@ answer_grader_prompt = """QUESTION: \n\n {question} \n\n STUDENT ANSWER: {genera
 
 Return JSON with two two keys, binary_score is 'yes' or 'no' score to indicate whether the STUDENT ANSWER meets the criteria. And a key, explanation, that contains an explanation of the score."""
 
+'''
 # Test
 question = "What are the vision models released today as part of Llama 3.2?"
 answer = "The Llama 3.2 models released today include two vision models: Llama 3.2 11B Vision Instruct and Llama 3.2 90B Vision Instruct, which are available on Azure AI Model Catalog via managed compute. These models are part of Meta's first foray into multimodal AI and rival closed models like Anthropic's Claude 3 Haiku and OpenAI's GPT-4o mini in visual reasoning. They replace the older text-only Llama 3.1 models."
-
+'''
+'''
 # Test using question and generation from above
 answer_grader_prompt_formatted = answer_grader_prompt.format(question=question, generation=answer)
 result = llm_json_mode.invoke([SystemMessage(content=answer_grader_instructions)] + [HumanMessage(content=answer_grader_prompt_formatted)])
 json.loads(result.content)
+'''
 
 ### Search
-from langchain_community.tools.tavily_search import TavilySearchResults
+
 web_search_tool = TavilySearchResults(k=3)
 
-import operator
-from typing_extensions import TypedDict
-from typing import List, Annotated
 
 class GraphState(TypedDict):
     """
@@ -214,10 +231,6 @@ class GraphState(TypedDict):
     answers : int # Number of answers generated
     loop_step: Annotated[int, operator.add]
     documents : List[str] # List of retrieved documents
-
-
-from langchain.schema import Document
-from langgraph.graph import END
 
 
 ### Nodes
@@ -301,7 +314,7 @@ def grade_documents(state):
 
 def web_search(state):
     """
-    Web search based based on the question
+    Web search based on the question
 
     Args:
         state (dict): The current graph state
@@ -423,8 +436,6 @@ def grade_generation_v_documents_and_question(state):
         print("---DECISION: MAX RETRIES REACHED---")
         return "max retries"
 
-from langgraph.graph import StateGraph
-from IPython.display import Image, display
 
 workflow = StateGraph(GraphState)
 
@@ -467,6 +478,8 @@ workflow.add_conditional_edges(
 graph = workflow.compile()
 display(Image(graph.get_graph().draw_mermaid_png()))
 
-## inputs = {"question": "What are the types of agent memory?", "max_retries": 3}
-## for event in graph.stream(inputs, stream_mode="values"):
-##     print(event)
+'''
+inputs = {"question": "What are the types of agent memory?", "max_retries": 3}
+for event in graph.stream(inputs, stream_mode="values"):
+print(event)
+'''
