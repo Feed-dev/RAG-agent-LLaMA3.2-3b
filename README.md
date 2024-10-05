@@ -6,65 +6,64 @@ This project implements a Retrieval-Augmented Generation (RAG) agent using Langg
 
 - Python 3.8+
 - Ollama (for running Llama3.2 locally)
-- Elasticsearch (for document storage and retrieval)
+- Pinecone (for vector storage and retrieval)
 - Tavily API key (for web search functionality)
 
 ## Installation
 
 1. Clone this repository:
+
    ```
    git clone https://github.com/yourusername/langgraph_rag_agent.git
    cd langgraph_rag_agent
    ```
 
 2. Create a virtual environment and activate it:
+
    ```
-   python -m venv venv
-   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   python -m venv .venv
+   source .venv/bin/activate # On Windows, use `.venv\Scripts\activate`
    ```
 
 3. Install the required packages:
+
    ```
    pip install -r requirements.txt
    ```
 
 4. Install Ollama:
+
    ```
    curl -fsSL https://ollama.com/install.sh | sh
    ```
 
 5. Pull the Llama3.2 model:
+
    ```
-   ollama pull llama3
+   ollama pull llama3.2:3b
    ```
 
 ## Configuration
 
-1. Copy the `.env.example` file to `.env`:
-   ```
-   cp .env.example .env
-   ```
+1. Create a `.env` file in the project root directory.
 
-2. Edit the `.env` file and set the following variables:
-   - `OLLAMA_MODEL`: The Ollama model to use (default: 'llama3')
-   - `ELASTICSEARCH_URL`: URL of your Elasticsearch instance
-   - `ELASTICSEARCH_INDEX`: Name of the Elasticsearch index to use
+2. Set the following environment variables in the `.env` file:
+
+   - `PINECONE_API_KEY`: Your Pinecone API key
+   - `PINECONE_ENVIRONMENT`: Your Pinecone environment
+   - `PINECONE_INDEX_NAME`: Name of your Pinecone index
+   - `COHERE_API_KEY`: Your Cohere API key for embeddings
    - `TAVILY_API_KEY`: Your Tavily API key for web search functionality
-   - `EMBEDDING_MODEL`: The embedding model to use (default: 'all-MiniLM-L6-v2')
-   - `RETRIEVER_K`: Number of documents to retrieve (default: 3)
-   - `WEB_SEARCH_K`: Number of web search results to retrieve (default: 3)
 
 ## Usage
 
 To run the Langgraph RAG agent, execute the following command:
 
-```
-python main.py
+``` 
+python main.py 
 ```
 
-The agent will process the default question: 'What are the latest developments in AI?'
-
-To use the agent with a different question, modify the `question` variable in the `main.py` file.
+The agent will prompt you to enter a question and a namespace for the Pinecone index.
 
 ## Project Structure
 
@@ -73,9 +72,15 @@ To use the agent with a different question, modify the `question` variable in th
 - `utils/`:
   - `config.py`: Configuration management
   - `llm.py`: Ollama LLM integration
-  - `retriever.py`: Document retrieval using Elasticsearch
+  - `retriever.py`: Document retrieval using Pinecone
   - `tools.py`: Web search tool implementation
   - `state.py`: State management for Langgraph
+
+## Key Components
+
+- **Retriever**: Uses Pinecone for vector storage and retrieval, with Cohere embeddings.
+- **Web Search**: Utilizes Tavily for web search functionality.
+- **LLM**: Integrates Ollama to run Llama3.2 locally for answer generation.
 
 ## Contributing
 
