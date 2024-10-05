@@ -1,0 +1,10 @@
+langchain
+langgraph
+langchain-community
+langchain-openai
+tiktoken
+langchainhub
+langchain-elasticsearch
+tavily-python
+gpt4all
+langchain-text-splitters
