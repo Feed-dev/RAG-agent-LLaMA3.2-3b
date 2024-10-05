@@ -50,10 +50,13 @@ This project implements a Retrieval-Augmented Generation (RAG) agent using Langg
 2. Set the following environment variables in the `.env` file:
 
    - `PINECONE_API_KEY`: Your Pinecone API key
-   - `PINECONE_ENVIRONMENT`: Your Pinecone environment
+   - `OLLAMA_MODEL`: llama3.2:3b
    - `PINECONE_INDEX_NAME`: Name of your Pinecone index
    - `COHERE_API_KEY`: Your Cohere API key for embeddings
    - `TAVILY_API_KEY`: Your Tavily API key for web search functionality
+   - `EMBEDDING_MODEL`: embed-multilingual-v3.0
+   - `RETRIEVER_K`: set the amount of docs u want to retrieve per query
+   - `WEB_SEARCH_K`: set the amount of web searches for one query
 
 ## Usage
 
