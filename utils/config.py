@@ -1,14 +1,42 @@
 import os
+from dotenv import load_dotenv
 
 class Config:
     def __init__(self):
-        self.OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3')
-        self.ELASTICSEARCH_URL = os.getenv('ELASTICSEARCH_URL', 'http://localhost:9200')
-        self.ELASTICSEARCH_INDEX = os.getenv('ELASTICSEARCH_INDEX', 'your_index_name')
-        self.TAVILY_API_KEY = os.getenv('TAVILY_API_KEY', 'your_tavily_api_key')
-        self.EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'all-MiniLM-L6-v2')
-        self.RETRIEVER_K = int(os.getenv('RETRIEVER_K', '3'))
-        self.WEB_SEARCH_K = int(os.getenv('WEB_SEARCH_K', '3'))
+        load_dotenv()  # Load environment variables from .env file
+
+        # Index settings
+        # self.ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "http://localhost:9200")
+        self.PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+        self.INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
+
+        # Cohere settings
+        self.COHERE_API_KEY = os.getenv("COHERE_API_KEY")
+        self.EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "embed-multilingual-v3.0")
+
+        # Ollama settings
+        self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "dolphin-llama3:8b")
+
+        # Retriever settings
+        self.RETRIEVER_K = int(os.getenv("RETRIEVER_K", "7"))
+
+        # Optional: Keep these if you still need them for other parts of your application
+        self.TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "your_tavily_api_key")
+        self.WEB_SEARCH_K = int(os.getenv("WEB_SEARCH_K", "3"))
 
     def __repr__(self):
-        return f"Config(OLLAMA_MODEL={self.OLLAMA_MODEL}, ELASTICSEARCH_URL={self.ELASTICSEARCH_URL}, ELASTICSEARCH_INDEX={self.ELASTICSEARCH_INDEX}, EMBEDDING_MODEL={self.EMBEDDING_MODEL}, RETRIEVER_K={self.RETRIEVER_K}, WEB_SEARCH_K={self.WEB_SEARCH_K})"
+        return (f"Config("
+                f"PINECONE_INDEX_NAME={self.INDEX_NAME}, "
+                f"COHERE_EMBEDDING_MODEL={self.EMBEDDING_MODEL}, "
+                f"OLLAMA_MODEL={self.OLLAMA_MODEL}, "
+                f"RETRIEVER_K={self.RETRIEVER_K})")
+
+    def get_llm(self):
+        from langchain_community.llms import Ollama
+        from langchain.callbacks.manager import CallbackManager
+        from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
+
+        return Ollama(
+            model=self.OLLAMA_MODEL,
+            callback_manager=CallbackManager([StreamingStdOutCallbackHandler()])
+        )
