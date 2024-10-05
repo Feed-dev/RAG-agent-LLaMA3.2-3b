@@ -5,7 +5,7 @@ from langchain_cohere import CohereEmbeddings
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain.retrievers.document_compressors import LLMChainExtractor
 from utils.config import Config
-from typing import List, Union
+from typing import List
 
 logger = logging.getLogger(__name__)
 config = Config()
@@ -35,7 +35,7 @@ def get_embeddings():
     )
 
 
-def create_retriever(index_name: str, namespace: Union[str, List[str]] = None):
+def create_retriever(index_name, namespace=None):
     try:
         logger.info(f"Creating retriever with index: {index_name}")
 
@@ -49,43 +49,24 @@ def create_retriever(index_name: str, namespace: Union[str, List[str]] = None):
         # Create vector store
         vector_store = PineconeVectorStore(index, embeddings, text_key="text")
 
+        # Set up search parameters
+        search_kwargs = {"k": config.RETRIEVER_K}
+        if namespace:
+            search_kwargs["namespace"] = namespace
+
+        # Create base retriever
+        base_retriever = vector_store.as_retriever(search_kwargs=search_kwargs)
+        logger.info(f"Created base retriever with search_kwargs: {search_kwargs}")
+
         # Set up LLM for contextual compression
         llm = config.get_llm()  # You'll need to implement this method in your Config class
         compressor = LLMChainExtractor.from_llm(llm)
 
-        if isinstance(namespace, list):
-            # Create a retriever for each namespace
-            retrievers = []
-            for ns in namespace:
-                search_kwargs = {"k": config.RETRIEVER_K, "namespace": ns}
-                base_retriever = vector_store.as_retriever(search_kwargs=search_kwargs)
-                retrievers.append(ContextualCompressionRetriever(base_compressor=compressor, base_retriever=base_retriever))
-            logger.info(f"Created retrievers for namespaces: {namespace}")
-            return retrievers
-        else:
-            # Create a single retriever
-            search_kwargs = {"k": config.RETRIEVER_K}
-            if namespace:
-                search_kwargs["namespace"] = namespace
-            base_retriever = vector_store.as_retriever(search_kwargs=search_kwargs)
-            logger.info(f"Created base retriever with search_kwargs: {search_kwargs}")
-            retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=base_retriever)
-            logger.info("Retriever created successfully")
-            return retriever
+        # Create contextual compression retriever
+        retriever = ContextualCompressionRetriever(base_compressor=compressor, base_retriever=base_retriever)
 
+        logger.info("Retriever created successfully")
+        return retriever
     except Exception as e:
         logger.error(f"Error creating retriever: {str(e)}")
         raise
-
-
-def get_relevant_documents(retriever, query: str):
-    if isinstance(retriever, list):
-        # If we have multiple retrievers (for multiple namespaces)
-        all_docs = []
-        for r in retriever:
-            docs = r.get_relevant_documents(query)
-            all_docs.extend(docs)
-        return all_docs
-    else:
-        # If we have a single retriever
-        return retriever.get_relevant_documents(query)
