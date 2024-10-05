@@ -7,7 +7,6 @@ class Config:
         load_dotenv()  # Load environment variables from .env file
 
         # Index settings
-        # self.ELASTICSEARCH_URL = os.getenv("ELASTICSEARCH_URL", "http://localhost:9200")
         self.PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
         self.INDEX_NAME = os.getenv("PINECONE_INDEX_NAME")
 
@@ -16,7 +15,7 @@ class Config:
         self.EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "embed-multilingual-v3.0")
 
         # Ollama settings
-        self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "dolphin-llama3:8b")
+        self.OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
 
         # Retriever settings
         self.RETRIEVER_K = int(os.getenv("RETRIEVER_K", "7"))
