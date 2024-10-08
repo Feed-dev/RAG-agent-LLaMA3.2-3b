@@ -226,7 +226,23 @@ def generate_answer(state: GraphState) -> GraphState:
                 context_strings.append(str(item))
 
         prompt = ChatPromptTemplate.from_template(
-            "Based on the following context, answer the question: {question}\n\nContext: {context}"
+            """You are an assistant for question-answering tasks. 
+
+Here is the context to use to answer the question:
+
+{context} 
+
+Think carefully about the above context. 
+
+Now, review the user question:
+
+{question}
+
+Provide an answer to this questions using only the above context. 
+
+Use seven sentences maximum and keep the answer concise.
+
+Answer:"""
         )
 
         chain = prompt | llm
