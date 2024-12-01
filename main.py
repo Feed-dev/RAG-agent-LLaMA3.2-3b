@@ -48,7 +48,7 @@ def main():
             result = agent.invoke(initial_state)
             logger.info(f"Agent result: {result}")
 
-            # Print final answer
+            # Print the final answer
             if result.get("final_answer"):
                 print(f"\nAnswer: {result['final_answer']}")
             elif result.get("error"):
